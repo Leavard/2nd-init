@@ -1,4 +1,4 @@
 #!/system/bin/sh
 /system/bin/sysinit
-touch /data/local/tmp/recoverylog.txt
-date >> /data/local/tmp/recoverylog.txt
+touch /sdcard/recoverylog.txt
+date >> /sdcard/recoverylog.txt

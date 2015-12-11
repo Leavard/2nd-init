@@ -16,7 +16,7 @@ fi
 $BB mount -o remount,rw rootfs /
 $BB killall bootanimation
 # mount /data now to get recovery mode detection working
-$BB mount -t ext4 /dev/block/platform/omap/omap_hsmmc.1/by-name/userdata /data -o nosuid,nodev,barrier=1,noauto_da_alloc
+$BB mount -t ext4 /dev/block/bootdevice/by-name/userdata /data -o nosuid,nodev,barrier=1,noauto_da_alloc
 
 # copy busybox
 $BB cp $BB /sbin
