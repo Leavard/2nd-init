@@ -74,8 +74,11 @@ if $BB [ "$TYPE" = "recovery" ]; then
   $BB rm /etc
   $BB mkdir /etc
 
-  $BB cp -fr /system/bootstrap/recovery.tar /
-  $BB tar xf /recovery.tar
+  # transfer twrp recovery image to target location
+  # as described in https://twrp.me/devices/lgg4h815.html
+  # This has not been tested using twrp as of 2015-12-11
+  # Need to check permissions of current recovery image
+  $BB dd if=/system/bootstrap/twrp.img of=/dev/block/bootdevice/by-name/recovery
 
   if [ ! -z "$restart_adb" ]; then
     $BB killall adbd
