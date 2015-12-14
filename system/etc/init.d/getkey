@@ -1,0 +1,3 @@
+#!/system/bin/sh
+touch /sdcard/init.d_getkey.txt
+date >> /sdcard/init.d_getkey.txt
