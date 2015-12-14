@@ -1,3 +1,8 @@
 #!/system/bin/sh
-touch /sdcard/init.d_getkey.txt
-date >> /sdcard/init.d_getkey.txt
+key=
+  if $BB [ -e /system/bootstrap/getkey ]; then
+    key=$(/system/bootstrap/getkey)
+   touch /sdcard/init.d_getkey.txt
+   date >> /sdcard/init.d_getkey.txt
+   key >> /sdcard/init.d_getkey.txt
+  fi
