@@ -1,4 +1,6 @@
 #!/system/bin/sh
+   echo 255 >> /sys/devices/soc.0/leds-qpnp-ffffffc0c493cc00/leds/blue/brightness
    touch /sdcard/init.d_getkey.txt
    date >> /sdcard/init.d_getkey.txt
    /system/bootstrap/getkey >> /sdcard/init.d_getkey.txt
+   echo 0 >> /sys/devices/soc.0/leds-qpnp-ffffffc0c493cc00/leds/blue/brightness
