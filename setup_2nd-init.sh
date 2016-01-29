@@ -6,16 +6,25 @@
 echo "Installer script for 2nd-init-G4."
 echo "Written for the LG G4 by Leavard."
 
-version=$(cat ./version)
-echo "Version number " $version
+#version=$(cat version)
+#echo "Version number " $version
+
 device_check()
 #Check to ensure that the device is compatible.
 {return}
 
 root_status()
 #Check to see if the device is rooted. 
-{Echo "Checking for root" 
-return
+{echo "Checking for root access..."
+if id | grep "root"; then 
+ echo "Root access detected successfully."
+return 1;
+else
+ echo "Root access not found."
+ echo "Please rerun this script with root access."
+ echo "If you are running as root and you continue to see this message, press contact the developer."
+return 0
+fi
 }
 
 initd_status()
@@ -39,4 +48,7 @@ initd_setup()
 #Uninstall 2nd-init-G4. Also used for cleanup of old version when updating.
 {return}
 
-
+if !root_status(); 
+ echo "Exiting."
+ exit;
+fi
