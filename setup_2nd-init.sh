@@ -13,27 +13,49 @@ device_check()
 #Check to ensure that the device is compatible.
 {return}
 
-root_status()
-#Check to see if the device is rooted. 
-{echo "Checking for root access..."
+#Check to see if the device is rooted.
+echo ""
+echo "Checking for root access..."
 if id | grep "root"; then 
- echo "Root access detected successfully."
-return 1;
+ echo "Root access detected successfully.";
 else
  echo "Root access not found."
  echo "Please rerun this script with root access."
  echo "If you are running as root and you continue to see this message, press contact the developer."
-return 0
+ exit 1
 fi
-}
 
-initd_status()
 #Check to see if init.d support has been enabled for this device.
-{return}
+echo ""
+echo "Checking for init.d support..."
+if cat /system/etc/init.qcom.post_boot.sh|grep "run-parts";
+then
+ echo "init.d support detected."
+ echo "";
+else
+ echo "init.d support not detected"
+ #Set up init.d using the method developed by XDA Member Somboon http://forum.xda-developers.com/showthread.php?t=3167315
+ echo "Modifying '/system/etc/init.qcom.post_boot.sh' with init.d support."
+ echo "Based on method posted by XDA user Somboon."
+ echo "Mounting /system as read-write."
+# mount -o rw,remount -t ext4 /system
+ echo "Injecting init.d"
+ echo "run-parts /system/etc/init.d" >> /system/etc/init.qcom.post_boot.sh
+ mkdir /system/etc/init.d
+ chmod 777 /system/etc/init.d
 
-initd_setup()
-#Set up init.d using the method developed by XDA Member ##### <url>
-{return}
+ echo "Mounting /system as read only."
+ mount -o ro,remount -t ext4 /system
+ echo "Checking for init.d support..."
+ if cat /system/etc/init.qcom.post_boot.sh|grep "run-parts";
+ then
+  echo "init.d installation successful.";
+ else
+  echo "init.d installation unsuccessful."
+  echo "Please contact Leavard on XDA."
+  exit 1
+ fi
+fi
 
 2nd-init-G4_status()
 #Returns the current version 2nd-init-G4 version number.
@@ -48,7 +70,9 @@ initd_setup()
 #Uninstall 2nd-init-G4. Also used for cleanup of old version when updating.
 {return}
 
-if !root_status(); 
- echo "Exiting."
- exit;
-fi
+#if !root_status(); 
+# then echo "Exiting."
+# exit;
+#fi
+
+#$(initd_status)
