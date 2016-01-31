@@ -8,11 +8,6 @@ if $BB [ -f /.bootstamp ]; then
   exit 0
 fi
 
-if $BB [ -f $STOP ]; then
-  # Stop init process
-  $STOP 1
-fi
-
 $BB mount -o remount,rw rootfs /
 $BB killall bootanimation
 # mount /data now to get recovery mode detection working
@@ -33,7 +28,7 @@ $BB touch /.bootstamp
 # check mode
 #
 TYPE=normal
-if $BB [ -f /data/.recovery_mode ]; then
+if $BB [ -f /data/temp/.recovery_mode ]; then
   TYPE=recovery
 else
   key=
@@ -46,7 +41,7 @@ else
 fi
 
 # remove recoverymode trigger and unmount data again
-$BB rm /data/.recovery_mode
+$BB rm /data/temp/.recovery_mode
 $BB umount /data
 
 # Continue init process
