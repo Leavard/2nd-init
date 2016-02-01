@@ -1,111 +1,99 @@
 #!/system/bin/sh
-export PATH=/system/bin:/sbin:$PATH
-SRC=/system/bootstrap/
-BB=/system/xbin/busybox
-STOP=$SRC/stop
 
-if $BB [ -f /.bootstamp ]; then
+if [ -f /.bootstamp ]; then
   exit 0
 fi
 
-$BB mount -o remount,rw rootfs /
-$BB killall bootanimation
+mount -o remount,rw rootfs /
+killall bootanimation
 # mount /data now to get recovery mode detection working
-$BB mount -t ext4 /dev/block/bootdevice/by-name/userdata /data -o nosuid,nodev,barrier=1,noauto_da_alloc
-
-# copy busybox
-$BB cp $BB /sbin
-# minimal symlinks
-$BB ln -s $BB /sbin/cp
-$BB ln -s $BB /sbin/[
-
-BB=/sbin/busybox
+mount -t ext4 /dev/block/bootdevice/by-name/userdata /data -o nosuid,nodev,barrier=1,noauto_da_alloc
 
 # touch stamp to prevent loop execution
-$BB touch /.bootstamp
+touch /.bootstamp
 
 #
 # check mode
 #
 TYPE=normal
-if $BB [ -f /data/temp/.recovery_mode ]; then
+if [ -f /data/temp/.recovery_mode ]; then
   TYPE=recovery
 else
   key=
-  if $BB [ -e /system/bootstrap/getkey ]; then
+  if [ -e /system/bootstrap/getkey ]; then
     key=$(/system/bootstrap/getkey)
   fi
-  if $BB [ "$key" = 115 ]; then
+  if [ "$key" = 115 ]; then
     TYPE=recovery
   fi
 fi
 
 # remove recoverymode trigger and unmount data again
-$BB rm /data/temp/.recovery_mode
-$BB umount /data
+rm /data/temp/.recovery_mode
+umount /data
 
 # Continue init process
-$BB kill -CONT 1
+kill -CONT 1
 
 # no boot.tar - stock rom
-if $BB [ "$TYPE" = "normal" ] && $BB [ ! -f /system/bootstrap/boot.tar ] ; then
+if [ "$TYPE" = "normal" ] && [ ! -f /system/bootstrap/boot.tar ] ; then
   exit 0
 fi
 
 # remove symbolic links
-$BB rm sdcard
+rm sdcard
 
 #
 # remove lg crap
 #
-$BB rm /*.rc
-$BB rm /*.sh
+rm /*.rc
+rm /*.sh
 
 #
 # volume down - recovery mode
 #
-if $BB [ "$TYPE" = "recovery" ]; then
+if [ "$TYPE" = "recovery" ]; then
   # unlink /etc
-  $BB rm /etc
-  $BB mkdir /etc
+  rm /etc
+  mkdir /etc
 
-  $BB cp -fr /system/bootstrap/recovery.tar /
-  $BB tar xf /recovery.tar
+  cp -fr /system/bootstrap/recovery.tar /
+  tar xf /recovery.tar
 
   if [ ! -z "$restart_adb" ]; then
-    $BB killall adbd
+    killall adbd
   fi
-  $BB killall ueventd
+  killall ueventd
   
-  $BB mkdir /tmp
-  $BB mkdir /cache
-  $BB mkdir /sdcard
-  $BB chmod 666 /dev/graphics/fb*
+  mkdir /tmp
+  mkdir /cache
+  mkdir /sdcard
+  chmod 666 /dev/graphics/fb*
 
-  $BB mount -o remount,rw /system /system
+  mount -o remount,rw /system /system
 #
 # normal mode
 #
 else
-  $BB cp -fr /system/bootstrap/boot.tar /
-  $BB tar xf /boot.tar
+  cp -fr /system/bootstrap/boot.tar /
+  tar xf /boot.tar
 
-  $BB killall ueventd
+  killall ueventd
 fi
 
 # unmount stuff
-$BB umount /dev/cpuctl
-$BB umount /dev/pts
-$BB umount /data
-$BB umount /dvp
-$BB umount /persist
-$BB umount /sys/kernel/debug
-$BB umount /system/app
-$BB umount /mpt
-$BB umount /mnt/asec
-$BB umount /mnt/obb
-$BB umount /mnt/extasec
-$BB umount /mnt/extobb
+umount /dev/cpuctl
+umount /dev/pts
+umount /data
+umount /dvp
+umount /persist
+umount /sys/kernel/debug
+umount /system/app
+umount /mpt
+umount /mnt/asec
+umount /mnt/obb
+umount /mnt/extasec
+umount /mnt/extobb
 
 # set our init only to the first core << check this
 /system/bootstrap/taskset -p -c 0 1
