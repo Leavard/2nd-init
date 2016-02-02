@@ -9,6 +9,14 @@ killall bootanimation
 # mount /data now to get recovery mode detection working
 mount -t ext4 /dev/block/bootdevice/by-name/userdata /data -o nosuid,nodev,barrier=1,noauto_da_alloc
 
+# touch 2nd-init log file
+touch /data/temp/2nd-init.log
+echo "" >> /data/temp/2nd-init.log
+echo "-------------------" >> /data/temp/2nd-init.log
+echo "" >> /data/temp/2nd-init.log
+echo "2nd-init boot log" >> /data/temp/2nd-init.log
+date >> /data/temp/2nd-init.log
+
 # touch stamp to prevent loop execution
 touch /.bootstamp
 
@@ -18,6 +26,7 @@ touch /.bootstamp
 TYPE=normal
 if [ -f /data/temp/.recovery_mode ]; then
   TYPE=recovery
+  echo "Recovery mode - file" >> /data/temp/2nd-init.log
 else
   key=
   if [ -e /system/bootstrap/getkey ]; then
@@ -25,18 +34,31 @@ else
   fi
   if [ "$key" = 115 ]; then
     TYPE=recovery
+    echo "Recovery mode - getkey" >> /data/temp/2nd-init.log
+  else
+    echo "Normal boot mode" >> /data/temp/2nd-init.log
   fi
 fi
-
+echo "ls -laZ /" >> /data/temp/2nd-init.log
+ls -laZ / >> /data/temp/2nd-init.log
+echo "" >> /data/temp/2nd-init.log
 # remove recoverymode trigger and unmount data again
 rm /data/temp/.recovery_mode
 umount /data
 
 # Continue init process
 kill -CONT 1
-
+echo "kill -CONT 1" >> /data/temp/2nd-init.log
+date >> /data/temp/2nd-init.log
+ >> /data/temp/2nd-init.log
+echo "ps -Z" >> /data/temp/2nd-init.log
+ps -Z >> /data/temp/2nd-init.log
+echo "" >> /data/temp/2nd-init.log
+  
 # no boot.tar - stock rom
 if [ "$TYPE" = "normal" ] && [ ! -f /system/bootstrap/boot.tar ] ; then
+  echo "Stock ROM detected, exiting 2nd-init" >> /data/temp/2nd-init.log
+  date >> /data/temp/2nd-init.log
   exit 0
 fi
 
@@ -48,6 +70,12 @@ rm sdcard
 #
 rm /*.rc
 rm /*.sh
+echo "Removed /*.rc and /*.sh" >> /data/temp/2nd-init.log
+date >> /data/temp/2nd-init.log
+echo "ls -laZ /" >> /data/temp/2nd-init.log
+ls -laZ / >> /data/temp/2nd-init.log
+echo "ps -Z" >> /data/temp/2nd-init.log
+ps -Z >> /data/temp/2nd-init.log
 
 #
 # volume down - recovery mode
@@ -59,7 +87,12 @@ if [ "$TYPE" = "recovery" ]; then
 
   cp -fr /system/bootstrap/recovery.tar /
   tar xf /recovery.tar
-
+  echo "Extracted recovery.tar" >> /data/temp/2nd-init.log
+  date >> /data/temp/2nd-init.log
+  echo "ls -laZ /" >> /data/temp/2nd-init.log
+  ls -laZ / >> /data/temp/2nd-init.log
+  echo "ps -Z" >> /data/temp/2nd-init.log
+  ps -Z >> /data/temp/2nd-init.log
   if [ ! -z "$restart_adb" ]; then
     killall adbd
   fi
@@ -77,8 +110,13 @@ if [ "$TYPE" = "recovery" ]; then
 else
   cp -fr /system/bootstrap/boot.tar /
   tar xf /boot.tar
-
+  echo "Extracted boot.tar" >> /data/temp/2nd-init.log
+  date >> /data/temp/2nd-init.log
+  echo "ls -laZ /" >> /data/temp/2nd-init.log
+  ls -laZ / >> /data/temp/2nd-init.log
   killall ueventd
+  echo "ps -Z" >> /data/temp/2nd-init.log
+  ps -Z >> /data/temp/2nd-init.log
 fi
 
 # unmount stuff
@@ -95,9 +133,19 @@ umount /mnt/obb
 umount /mnt/extasec
 umount /mnt/extobb
 
+echo "umount all the things." >> /data/temp/2nd-init.log
+date >> /data/temp/2nd-init.log
+echo "ls -laZ /" >> /data/temp/2nd-init.log
+ls -laZ / >> /data/temp/2nd-init.log
 # set our init only to the first core << check this
-/system/bootstrap/taskset -p -c 0 1
-/system/bootstrap/taskset -c 0 /system/bootstrap/2nd-init
+#/system/bootstrap/taskset -p -c 0 1
+#/system/bootstrap/taskset -c 0 /system/bootstrap/2nd-init
 #/system/bootstrap/2nd-init
+/init
 
+echo "run /init" >> /data/temp/2nd-init.log
+echo "ps -Z" >> /data/temp/2nd-init.log
+ps -Z >> /data/temp/2nd-init.log
+echo "exit" >> /data/temp/2nd-init.log
+date >> /data/temp/2nd-init.log
 exit 0
