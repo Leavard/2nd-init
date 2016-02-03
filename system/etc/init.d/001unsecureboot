@@ -9,11 +9,14 @@ killall bootanimation
 # mount /data now to get recovery mode detection working
 mount -t ext4 /dev/block/bootdevice/by-name/userdata /data -o nosuid,nodev,barrier=1,noauto_da_alloc
 
-# Define log filename
-LOG="/data/temp/2nd-init_"$(date +%F_%T)".log"
+# Define log directory
+LOGDIR=="/data/temp/2nd-init-log_"$(date +%F_%T)"/"
+mkdir "$LOGDIR"
 
-# touch 2nd-init log file
+# Define log filename
+LOG=$LOGDIR/unsecureboot.log"
 touch "$LOG"
+
 echo "2nd-init boot log" >> "$LOG"
 date >> "$LOG"
 
@@ -39,9 +42,10 @@ else
     echo "Normal boot mode" >> "$LOG"
   fi
 fi
-echo "ls -laZ /" >> "$LOG"
-ls -laZ / >> "$LOG"
-echo "" >> "$LOG"
+echo "ls -laZ /" >> "$LOGDIR/ls_1-stock.log"
+ls -laZ / >> "$LOGDIR/ls_1-stock.log"
+echo "ps -Z" >> "$LOGDIR/ps_1-stock.log"
+ps -Z >> "LOGDIR/ps_1-stock.log"
 # remove recoverymode trigger and unmount data again
 rm /data/temp/.recovery_mode
 umount /data
@@ -50,9 +54,8 @@ umount /data
 kill -CONT 1
 echo "kill -CONT 1" >> "$LOG"
 date >> "$LOG"
-echo "ps -Z" >> "$LOG"
-ps -Z >> "$LOG"
-echo "" >> "$LOG"
+echo "ps -Z" >> "$LOGDIR/ps_2-kill -cont 1.log"
+ps -Z >> "LOGDIR/ps_2-kill -cont 1.log"
   
 # no boot.tar - stock rom
 if [ "$TYPE" = "normal" ] && [ ! -f /system/bootstrap/boot.tar ] ; then
@@ -71,10 +74,8 @@ rm /*.rc
 rm /*.sh
 echo "Removed /*.rc and /*.sh" >> "$LOG"
 date >> "$LOG"
-echo "ls -laZ /" >> "$LOG"
-ls -laZ / >> "$LOG"
-echo "ps -Z" >> "$LOG"
-ps -Z >> "$LOG"
+echo "ls -laZ /" >> "$LOGDIR/ls_2-no rc sh.log"
+ls -laZ / >> "$LOGDIR/ls_2-no rc sh.log"
 
 #
 # volume down - recovery mode
@@ -88,10 +89,8 @@ if [ "$TYPE" = "recovery" ]; then
   tar xf /recovery.tar
   echo "Extracted recovery.tar" >> "$LOG"
   date >> "$LOG"
-  echo "ls -laZ /" >> "$LOG"
-  ls -laZ / >> "$LOG"
-  echo "ps -Z" >> "$LOG"
-  ps -Z >> "$LOG"
+  echo "ls -laZ /" >> "$LOGDIR/ls_3-recovery.log"
+  ls -laZ / >> "$LOGDIR/ls_3-recovery.log"
   if [ ! -z "$restart_adb" ]; then
     killall adbd
   fi
@@ -111,12 +110,13 @@ else
   tar xf /boot.tar
   echo "Extracted boot.tar" >> "$LOG"
   date >> "$LOG"
-  echo "ls -laZ /" >> "$LOG"
-  ls -laZ / >> "$LOG"
+  echo "ls -laZ /" >> "$LOGDIR/ls_3-boot.log"
+  ls -laZ / >> "$LOGDIR/ls_3-boot.log"
   killall ueventd
-  echo "ps -Z" >> "$LOG"
-  ps -Z >> "$LOG"
 fi
+
+echo "ps -Z" >> "$LOGDIR/ps_3-kill all ueventd.log"
+ps -Z >> "LOGDIR/ps_3-kill all ueventd.log"
 
 # unmount stuff
 umount /dev/cpuctl
@@ -134,8 +134,8 @@ umount /mnt/extobb
 
 echo "umount all the things." >> "$LOG"
 date >> "$LOG"
-echo "ls -laZ /" >> "$LOG"
-ls -laZ / >> "$LOG"
+echo "ls -laZ /" >> "$LOGDIR/ls_4-umount all.log"
+ls -laZ / >> "$LOGDIR/ls_4-umount all.log"
 # set our init only to the first core << check this
 #/system/bootstrap/taskset -p -c 0 1
 #/system/bootstrap/taskset -c 0 /system/bootstrap/2nd-init
@@ -143,8 +143,8 @@ ls -laZ / >> "$LOG"
 /init
 
 echo "run /init" >> "$LOG"
-echo "ps -Z" >> "$LOG"
-ps -Z >> "$LOG"
+echo "ps -Z" >> "$LOGDIR/ps_4-2nd-init.log"
+ps -Z >> "LOGDIR/ps_4-2nd-init.log"
 echo "exit" >> "$LOG"
 date >> "$LOG"
 exit 0
