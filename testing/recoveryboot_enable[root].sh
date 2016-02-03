@@ -1,4 +1,4 @@
 #!/system/bin/sh
 
 touch /data/temp/.recovery_mode
-echo $(./recoveryboot_check.sh)
+/storage/emulated/0/git/2nd-init/testing/recoveryboot_check.sh
