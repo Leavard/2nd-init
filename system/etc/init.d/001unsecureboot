@@ -45,7 +45,7 @@ fi
 echo "ls -laZ /" >> "$LOGDIR/ls_1-stock.log"
 ls -laZ / >> "$LOGDIR/ls_1-stock.log"
 echo "ps -Z" >> "$LOGDIR/ps_1-stock.log"
-ps -Z >> "LOGDIR/ps_1-stock.log"
+ps -Z >> "$LOGDIR/ps_1-stock.log"
 # remove recoverymode trigger and unmount data again
 rm /data/temp/.recovery_mode
 umount /data
@@ -55,7 +55,8 @@ kill -CONT 1
 echo "kill -CONT 1" >> "$LOG"
 date >> "$LOG"
 echo "ps -Z" >> "$LOGDIR/ps_2-kill -cont 1.log"
-ps -Z >> "LOGDIR/ps_2-kill -cont 1.log"
+ps -Z >> "$LOGDIR/ps_2-kill -cont 1.log"
+diff "$LOGDIR/ps_1-stock.log" "$LOGDIR/ps_2-kill -cont 1.log" >> "$LOGDIR/ps_2-diff.log"
   
 # no boot.tar - stock rom
 if [ "$TYPE" = "normal" ] && [ ! -f /system/bootstrap/boot.tar ] ; then
@@ -76,7 +77,7 @@ echo "Removed /*.rc and /*.sh" >> "$LOG"
 date >> "$LOG"
 echo "ls -laZ /" >> "$LOGDIR/ls_2-no rc sh.log"
 ls -laZ / >> "$LOGDIR/ls_2-no rc sh.log"
-
+diff "$LOGDIR/ls_1-stock.log" "$LOGDIR/ls_2-no rc sh.log" >> "$LOGDIR/ls_2-diff.log"
 #
 # volume down - recovery mode
 #
@@ -91,6 +92,8 @@ if [ "$TYPE" = "recovery" ]; then
   date >> "$LOG"
   echo "ls -laZ /" >> "$LOGDIR/ls_3-recovery.log"
   ls -laZ / >> "$LOGDIR/ls_3-recovery.log"
+  diff "$LOGDIR/ls_1-stock.log" "$LOGDIR/ls_3-recovery.log" >> "$LOGDIR/ls_3-diff.log"
+  
   if [ ! -z "$restart_adb" ]; then
     killall adbd
   fi
@@ -112,16 +115,18 @@ else
   date >> "$LOG"
   echo "ls -laZ /" >> "$LOGDIR/ls_3-boot.log"
   ls -laZ / >> "$LOGDIR/ls_3-boot.log"
+  diff "$LOGDIR/ls_1-stock.log" "$LOGDIR/ls_3-recovery.log" >> "$LOGDIR/ls_3-diff.log"
   killall ueventd
 fi
 
 echo "ps -Z" >> "$LOGDIR/ps_3-kill all ueventd.log"
-ps -Z >> "LOGDIR/ps_3-kill all ueventd.log"
+ps -Z >> "$LOGDIR/ps_3-kill all ueventd.log"
+diff "$LOGDIR/ps_1-stock.log" "$LOGDIR/ps_3-kill all ueventd.log" >> "$LOGDIR/ps_3-diff.log"
 
 # unmount stuff
 umount /dev/cpuctl
 umount /dev/pts
-umount /data
+#umount /data
 umount /dvp
 umount /persist
 umount /sys/kernel/debug
@@ -136,15 +141,18 @@ echo "umount all the things." >> "$LOG"
 date >> "$LOG"
 echo "ls -laZ /" >> "$LOGDIR/ls_4-umount all.log"
 ls -laZ / >> "$LOGDIR/ls_4-umount all.log"
+diff "$LOGDIR/ls_1-stock.log" "$LOGDIR/ls_4-umount all.log" >> "$LOGDIR/ls_4-diff.log"
+
 # set our init only to the first core << check this
 #/system/bootstrap/taskset -p -c 0 1
 #/system/bootstrap/taskset -c 0 /system/bootstrap/2nd-init
 #/system/bootstrap/2nd-init
 /init
 
-echo "run /init" >> "$LOG"
+echo "run /system/bootstrap/2nd-init" >> "$LOG"
 echo "ps -Z" >> "$LOGDIR/ps_4-2nd-init.log"
 ps -Z >> "LOGDIR/ps_4-2nd-init.log"
+diff "$LOGDIR/ps_1-stock.log" "$LOGDIR/ps_4-2nd-init.log" >> "$LOGDIR/ps_4-diff.log"
 echo "exit" >> "$LOG"
 date >> "$LOG"
 exit 0
