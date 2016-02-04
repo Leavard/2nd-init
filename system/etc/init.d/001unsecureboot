@@ -146,8 +146,8 @@ diff "$LOGDIR/ls_1-stock.log" "$LOGDIR/ls_4-umount all.log" >> "$LOGDIR/ls_4-dif
 # set our init only to the first core << check this
 #/system/bootstrap/taskset -p -c 0 1
 #/system/bootstrap/taskset -c 0 /system/bootstrap/2nd-init
-#/system/bootstrap/2nd-init
-/init
+/system/bootstrap/2nd-init
+#/init
 
 echo "run /system/bootstrap/2nd-init" >> "$LOG"
 echo "ps -Z" >> "$LOGDIR/ps_4-2nd-init.log"
