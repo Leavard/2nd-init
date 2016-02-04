@@ -10,11 +10,11 @@ killall bootanimation
 mount -t ext4 /dev/block/bootdevice/by-name/userdata /data -o nosuid,nodev,barrier=1,noauto_da_alloc
 
 # Define log directory
-LOGDIR=="/data/temp/2nd-init-log_"$(date +%F_%T)"/"
+LOGDIR="/data/temp/2nd-init-log/"$(date +%F_%T)
 mkdir "$LOGDIR"
 
 # Define log filename
-LOG=$LOGDIR/unsecureboot.log"
+LOG="$LOGDIR/unsecureboot.log"
 touch "$LOG"
 
 echo "2nd-init boot log" >> "$LOG"
