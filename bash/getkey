@@ -1,0 +1,14 @@
+#!/system/bin/sh
+if [ -e /data/temp/keycheck ];
+ then
+   rm /data/temp/keycheck
+   touch /sdcard/init.d_getkey.txt
+   date >> /sdcard/init.d_getkey.txt
+   ls -laZ /system/bootstrap/getkey  >> /sdcard/init.d_getkey.txt
+   echo "key id" >> /sdcard/init.d_getkey.txt
+   /system/bootstrap/getkey >> /sdcard/init.d_getkey.txt
+   exit 0;
+  else
+   exit 1
+fi
+   

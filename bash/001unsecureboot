@@ -1,0 +1,165 @@
+#!/system/bin/sh
+
+if [ -f /.bootstamp ]; then
+  exit 0
+fi
+
+mount -o remount,rw rootfs /
+#killall bootanimation
+# mount /data now to get recovery mode detection working
+#mount -t ext4 /dev/block/bootdevice/by-name/userdata /data -o nosuid,nodev,barrier=1,noauto_da_alloc
+mount -o remount,rw /data /data
+
+# Define log directory
+LOGDIR="/data/temp/2nd-init-log/"$(date +%F_%T)
+mkdir "$LOGDIR"
+
+# Define log filename
+LOG="$LOGDIR/unsecureboot.log"
+touch "$LOG"
+
+echo "2nd-init boot log" >> "$LOG"
+date >> "$LOG"
+
+# touch stamp to prevent loop execution
+touch /.bootstamp
+
+#
+# check mode
+#
+TYPE=normal
+if [ -f /data/temp/.recovery_mode ]; then
+  TYPE=recovery
+  echo "Recovery mode - file" >> "$LOG"
+else
+  key=
+  if [ -e /system/bootstrap/getkey ]; then
+    key=$(/system/bootstrap/getkey)
+  fi
+  if [ "$key" = 115 ]; then
+    TYPE=recovery
+    echo "Recovery mode - getkey" >> "$LOG"
+  else
+    echo "Normal boot mode" >> "$LOG"
+  fi
+fi
+echo "ls -laZ /" >> "$LOGDIR/ls_1-stock.log"
+ls -laZ / >> "$LOGDIR/ls_1-stock.log"
+echo "ps -Z" >> "$LOGDIR/ps_1-stock.log"
+ps -Z >> "$LOGDIR/ps_1-stock.log"
+# remove recoverymode trigger and unmount data again
+if [ -f /data/temp/.recovery_mode ]; then
+ rm /data/temp/.recovery_mode
+fi
+umount /data
+
+# Continue init process
+kill -CONT 1
+echo "kill -CONT 1" >> "$LOG"
+date >> "$LOG"
+echo "ps -Z" >> "$LOGDIR/ps_2-kill -cont 1.log"
+ps -Z >> "$LOGDIR/ps_2-kill -cont 1.log"
+  
+# no boot.tar - stock rom
+if [ "$TYPE" = "normal" ] && [ ! -f /system/bootstrap/boot.tar ] ; then
+  echo "Stock ROM detected, exiting 2nd-init" >> "$LOG"
+  date >> "$LOG"
+  exit 0
+fi
+
+# remove symbolic links
+rm sdcard
+
+#
+# remove lg crap
+#
+rm /*.rc
+rm /*.sh
+echo "Removed /*.rc and /*.sh" >> "$LOG"
+date >> "$LOG"
+echo "ls -laZ /" >> "$LOGDIR/ls_2-no rc sh.log"
+ls -laZ / >> "$LOGDIR/ls_2-no rc sh.log"
+#
+# volume down - recovery mode
+#
+if [ "$TYPE" = "recovery" ]; then
+  # unlink /etc
+  rm /etc
+  mkdir /etc
+
+  cp -fr /system/bootstrap/recovery.tar /
+  tar xf /recovery.tar
+  echo "Extracted recovery.tar" >> "$LOG"
+  date >> "$LOG"
+  echo "ls -laZ /" >> "$LOGDIR/ls_3-recovery.log"
+  ls -laZ / >> "$LOGDIR/ls_3-recovery.log"
+  
+#  if [ ! -z "$restart_adb" ]; then
+#    killall adbd
+#  fi
+#  killall ueventd
+  
+  mkdir /tmp
+  mkdir /cache
+  mkdir /sdcard
+  chmod 666 /dev/graphics/fb*
+
+  mount -o remount,rw /system /system
+#
+# normal mode
+#
+else
+  cp -fr /system/bootstrap/boot.tar /
+  tar xf /boot.tar
+  echo "Extracted boot.tar" >> "$LOG"
+  date >> "$LOG"
+  echo "ls -laZ /" >> "$LOGDIR/ls_3-boot.log"
+  ls -laZ / >> "$LOGDIR/ls_3-boot.log"
+  killall ueventd
+fi
+
+echo "ps -Z" >> "$LOGDIR/ps_3-kill all ueventd.log"
+ps -Z >> "$LOGDIR/ps_3-kill all ueventd.log"
+
+# unmount stuff
+umount /dev/cpuctl
+umount /dev/pts
+#umount /data
+umount /dvp
+umount /persist
+umount /sys/kernel/debug
+umount /system/app
+umount /mpt
+umount /mnt/asec
+umount /mnt/obb
+umount /mnt/extasec
+umount /mnt/extobb
+
+echo "umount all the things." >> "$LOG"
+date >> "$LOG"
+echo "ls -laZ /" >> "$LOGDIR/ls_4-umount all.log"
+ls -laZ / >> "$LOGDIR/ls_4-umount all.log"
+
+# set our init only to the first core << check this
+#/system/bootstrap/taskset -p -c 0 1
+#/system/bootstrap/taskset -c 0 /system/bootstrap/2nd-init
+#/system/bootstrap/2nd-init
+#/init
+
+echo "df /" >> "$LOGDIR/df.log"
+
+echo "Checking selinux contexts." >> "$LOG"
+restorecon -n / >> "$LOG"
+echo "Restoring selinux contexts." >> "$LOG"
+restorecon -Rv / >> "$LOG"
+
+#echo "run /system/bootstrap/2nd-init" >> "$LOG"
+echo "restart init" >> "$LOG"
+
+init u
+
+echo "ps -Z" >> "$LOGDIR/ps_4-2nd-init.log"
+ps -Z >> "LOGDIR/ps_4-2nd-init.log"
+echo "exit" >> "$LOG"
+date >> "$LOG"
+exit 0
